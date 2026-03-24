@@ -1,0 +1,375 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "sendTo": "yesid.sanchez@copservir.co",
+        "subject": "={{ $json.result.text }}",
+        "message": "💀🚨💀 ¡OJO! Realizar Reporte Diario Jornada Laboral 💀🚨💀https://form.asana.com/?k=WGw15u-lXbBnkEa_Dw0pAQ&d=1204083449956184",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        560,
+        0
+      ],
+      "id": "c9eb618a-94c4-4318-996c-8b09349f06f3",
+      "name": "Send a message",
+      "webhookId": "48db348c-e9b0-4cbe-a0c8-398ebaf1bec2",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "9jDKSkPmngF2Bxag",
+          "name": "n8n cuenta de prueba"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chatId }}",
+        "text": "=💀🚨💀 ¡OJO! Realizar Reporte Diario Jornada Laboral 💀🚨💀https://form.asana.com/?k=WGw15u-lXbBnkEa_Dw0pAQ&d=1204083449956184\n\n",
+        "replyMarkup": "=none",
+        "forceReply": {},
+        "replyKeyboardOptions": {},
+        "replyKeyboardRemove": {},
+        "additionalFields": {
+          "appendAttribution": false,
+          "disable_notification": true,
+          "disable_web_page_preview": false,
+          "parse_mode": "HTML",
+          "reply_to_message_id": 0,
+          "message_thread_id": 0
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        352,
+        0
+      ],
+      "id": "53f03a76-250d-4c04-ae7d-a5afb74b1b66",
+      "name": "Send a text message1",
+      "webhookId": "f3c7816c-43e5-4082-8676-b9330542905a",
+      "credentials": {
+        "telegramApi": {
+          "id": "B5x2dFt8CLBCH3AQ",
+          "name": "asanabot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                1,
+                2,
+                3,
+                4,
+                5
+              ],
+              "triggerAtHour": 6,
+              "triggerAtMinute": 10
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -80,
+        192
+      ],
+      "id": "05b65876-c944-4cb1-9935-04482ef23603",
+      "name": "Schedule Trigger1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const chatIds = [\n  \"7578428511\",\n  \"7237174388\",\n  \"7867904883\", \n  \"1547297287\"\n  \n];\n\nconst tiempoString = $input.first().json['Readable time'];\n\nfunction parsearHora(horaStr) {\n  const partes = horaStr.match(/(\\d+):(\\d+):(\\d+)\\s*(am|pm)/i);\n  \n  if (!partes) return null;\n  \n  let horas = parseInt(partes[1]);\n  const minutos = parseInt(partes[2]);\n  const segundos = parseInt(partes[3]);\n  const ampm = partes[4].toLowerCase();\n  \n  if (ampm === 'pm' && horas < 12) {\n    horas += 12;\n  } else if (ampm === 'am' && horas === 12) {\n    horas = 0;\n  }\n  \n  return { horas, minutos, segundos };\n}\n\nfunction calcularDiferenciaCon630(horaStr) {\n  const horaActual = parsearHora(horaStr);\n  \n  if (!horaActual) {\n    return {\n      texto: \"Error: Formato de hora no válido\",\n      minutosDiferencia: 0,\n      horasDiferencia: 0\n    };\n  }\n  \n  const minutosActuales = (horaActual.horas * 60) + horaActual.minutos;\n  const minutos630 = (6 * 60) + 30;\n  \n  const diferenciaMinutos = minutosActuales - minutos630;\n  const horas = Math.floor(Math.abs(diferenciaMinutos) / 60);\n  const minutos = Math.abs(diferenciaMinutos) % 60;\n  \n  let signo = \"\";\n  if (diferenciaMinutos > 0) {\n    signo = \"después\";\n  } else if (diferenciaMinutos < 0) {\n    signo = \"antes\";\n  } else {\n    signo = \"exactamente\";\n  }\n  \n  let texto;\n  if (diferenciaMinutos === 0) {\n    texto = \"exactamente las 6:30\";\n  } else if (horas === 0) {\n    texto = `${minutos} minutos ${signo} de las 6:30`;\n  } else {\n    texto = `${horas} horas y ${minutos} minutos ${signo} de las 6:30`;\n  }\n  \n  return {\n    texto: texto,\n    minutosDiferencia: diferenciaMinutos,\n    horasDiferencia: horas\n  };\n}\n\nconst resultado = calcularDiferenciaCon630(tiempoString);\n\n// Aquí asignamos un nombre temporal que luego será reemplazado\n// por el nombre real cuando pase por Telegram\nreturn chatIds.map(id => ({\n  json: {\n    chatId: id,\n    nombreTemp: \"Cargando...\", // Este será reemplazado\n    horaActual: tiempoString,\n    diferencia: resultado.texto,\n    minutosDiferencia: resultado.minutosDiferencia,\n    horasDiferencia: resultado.horasDiferencia\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        128,
+        192
+      ],
+      "id": "1bb52e8a-dd67-4262-b647-07d4bcb821c1",
+      "name": "Code in JavaScript",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chatId }}",
+        "text": "=Asunto:     ⚠️ RECORDATORIO: Registro de Jornada Laboral\n\nHora:       {{ $json.horaActual }}\n\nImportante: Queda {{ $json.diferencia }}  para completar el reporte de jornada.\n\nPara evitar retrasos en el cierre del día, te invitamos a diligenciar el formulario ahora mismo.\nAcceso directo: ",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "Ingresar al Formulario",
+                    "additionalFields": {
+                      "url": "https://form.asana.com/?k=WGw15u-lXbBnkEa_Dw0pAQ&d=1204083449956184"
+                    }
+                  },
+                  {
+                    "text": "Ya Realice el reporte",
+                    "additionalFields": {
+                      "switch_inline_query_current_chat": "Ok, Vuelve a Ingresar Mañana"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false,
+          "disable_notification": false,
+          "disable_web_page_preview": false,
+          "parse_mode": "Markdown"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        368,
+        192
+      ],
+      "id": "6f05994c-3a27-4749-8061-afec8660307b",
+      "name": "Send a text message",
+      "webhookId": "1fd5a6df-396a-42cc-97fe-df2c4cf83290",
+      "executeOnce": false,
+      "credentials": {
+        "telegramApi": {
+          "id": "uQqYtY8WnE65c3nG",
+          "name": "ventas_copservirbot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtener todos los items de entrada\nconst items = $input.all();\n\n// Procesar cada item para extraer el nombre y la interacción\nconst resultados = items.map(item => {\n  // Extraer nombre del usuario\n  const nombre = item.json?.result?.chat?.first_name || \n                item.json?.from?.first_name || \n                item.json?.chat?.first_name || \n                \"Nombre no disponible\";\n  \n  const chatId = item.json?.result?.chat?.id || \n                item.json?.chat?.id || \n                item.json?.chatId;\n  \n  const horaActual = item.json?.horaActual || \n                    item.json?.result?.text?.match(/Hora: (.*?)(?:\\n|$)/)?.[1] || \n                    \"Hora no disponible\";\n  \n  // Extraer la diferencia del texto del mensaje\n  let diferencia = item.json?.diferencia;\n  if (!diferencia && item.json?.result?.text) {\n    const match = item.json.result.text.match(/Queda (.*?) para completar/);\n    diferencia = match ? match[1] : \"No disponible\";\n  }\n  \n  // Capturar la interacción del usuario (qué botón oprimió)\n  let interaccion = \"Sin interacción\";\n  \n  // Verificar si hay callback_query (cuando el usuario hace clic en un botón inline)\n  if (item.json?.callback_query?.data) {\n    interaccion = item.json.callback_query.data;\n  } \n  // Verificar si hay mensaje de texto de respuesta\n  else if (item.json?.message?.text) {\n    interaccion = item.json.message.text;\n  }\n  // Verificar si hay texto en el resultado\n  else if (item.json?.result?.text) {\n    interaccion = item.json.result.text;\n  }\n  // Verificar si es el mensaje enviado por el bot (sin interacción aún)\n  else if (item.json?.text) {\n    interaccion = \"Mensaje enviado - Esperando respuesta\";\n  }\n  \n  // Detectar específicamente qué botón se oprimió\n  if (interaccion.includes(\"Ok, Vuelve a Ingresar Mañana\")) {\n    interaccion = \"Botón: Ya realicé el reporte\";\n  } else if (item.json?.callback_query?.data === \"Ingresar al Formulario\" || \n             interaccion.includes(\"Ingresar al Formulario\")) {\n    interaccion = \"Botón: Ingresar al Formulario\";\n  }\n  \n  return {\n    json: {\n      chatId: chatId,\n      nombreCompleto: `${nombre} ${item.json?.result?.chat?.last_name || ''}`.trim(),\n      nombre: nombre,\n      apellido: item.json?.result?.chat?.last_name || '',\n      horaActual: horaActual,\n      diferencia: diferencia,\n      minutosDiferencia: item.json?.minutosDiferencia || 0,\n      horasDiferencia: item.json?.horasDiferencia || 0,\n      interaccion: interaccion,\n      timestamp: new Date().toISOString()\n    }\n  };\n});\n\nreturn resultados;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        608,
+        192
+      ],
+      "id": "96fadc5e-6c16-4d53-b168-aa62340b40c7",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1E97TiVWwQTJpDZD48taEMusb8sVpO3FjR-Ts2VsenBE",
+          "mode": "list",
+          "cachedResultName": "hoja de n8n reporte ",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1E97TiVWwQTJpDZD48taEMusb8sVpO3FjR-Ts2VsenBE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Hoja 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1E97TiVWwQTJpDZD48taEMusb8sVpO3FjR-Ts2VsenBE/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Registro": "={{ $json.chatId }}",
+            "Nombre": "={{ $json.nombre }}",
+            "Apellido": "={{ $json.apellido }}",
+            "Nombre Completo": "={{ $json.nombreCompleto }}",
+            "Hora": "={{ $json.horaActual }}",
+            "Diferencia": "={{ $json.diferencia }}",
+            "Minutos Diferencia": "={{ $('Code in JavaScript').item.json.nombreTemp }}",
+            "Interaccion": "={{ $json.interaccion }}"
+          },
+          "matchingColumns": [
+            "Registro"
+          ],
+          "schema": [
+            {
+              "id": "Registro",
+              "displayName": "Registro",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Nombre",
+              "displayName": "Nombre",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Apellido",
+              "displayName": "Apellido",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Nombre Completo",
+              "displayName": "Nombre Completo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Hora",
+              "displayName": "Hora",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Diferencia",
+              "displayName": "Diferencia",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Minutos Diferencia",
+              "displayName": "Minutos Diferencia",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Interaccion",
+              "displayName": "Interaccion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        816,
+        192
+      ],
+      "id": "47b281d4-05f8-40d5-895a-6393806a732a",
+      "name": "Append or update row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Wk8jUzSLl0pK4Syg",
+          "name": "produccion"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Send a text message1": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        []
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "d4e56e9d-49b4-4676-8a90-7aea4653fba1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ddc0366dfc745de3552fd12efa4741d606ed9b2238c7af264dab5222c1e67ece"
+  },
+  "id": "uhJU9t8i9q0Nq42v",
+  "tags": []
+}
