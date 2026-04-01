@@ -1,0 +1,727 @@
+{
+  "name": "Reporte NVL de Servicios",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "https://api.apiflash.com/v1/urltoimage?access_key=5f5d3ceb603d47a4b9da340a1f840e77&url=https%3A%2F%2Flookerstudio.google.com%2Fu%2F1%2Freporting%2F9c34f067-3c33-4e55-a428-d412e5493613%2Fpage%2FspLpF&format=jpeg&fresh=true",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "access_key",
+              "value": "5f5d3ceb603d47a4b9da340a1f840e77"
+            },
+            {
+              "name": "url",
+              "value": "https://lookerstudio.google.com/u/1/reporting/9c34f067-3c33-4e55-a428-d412e5493613/page/spLpF"
+            },
+            {
+              "name": "delay",
+              "value": "10"
+            },
+            {
+              "name": "format",
+              "value": "jpeg"
+            },
+            {
+              "name": "quality",
+              "value": "80"
+            },
+            {
+              "name": "width",
+              "value": "1920"
+            },
+            {
+              "name": "height",
+              "value": "1800"
+            },
+            {
+              "name": "wait_until",
+              "value": "network_idle"
+            },
+            {
+              "name": "wait_for",
+              "value": "svg"
+            },
+            {
+              "name": "full_page",
+              "value": "true"
+            },
+            {}
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "id": "0d6cf579-7d90-45ed-95e0-f97a1e90787e",
+      "name": "Capturar Looker (APIFlash)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -800,
+        336
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "2ae85bfa-7ff7-4266-b6ae-4e2ddf72309d",
+      "name": "Ejecutar Manualmente",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1056,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "3d9e0075-ee41-49de-8a91-8fb8dd6526ff",
+              "leftValue": "={{ $json['tamañoBytes'] }}",
+              "rightValue": 200232,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "9d2e6b15-8101-4bf0-8884-72c9d85336cc",
+      "name": "IF Error Detectado?1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -352,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const chatIds = ['7237174388','7867904883','1547297287','7718315100','7578428511'];\nreturn chatIds.map(chatId => ({\n  json: { chatId },\n  binary: items[0].binary\n}));"
+      },
+      "id": "4935c0a3-cb54-4666-bd3c-3b0283c0e5b2",
+      "name": "Lista Destinatarios Error1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -80,
+        448
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "sendPhoto",
+        "chatId": "={{ $json.chatId }}",
+        "binaryData": true,
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "Ingresar al Informe",
+                    "additionalFields": {
+                      "url": "https://n9.cl/rcsrg"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "caption": "=⚠️ Error en el Reporte de Nivel de Servicio\n\nImagen inválida o sin datos.\n\n({{ $now.minus({ days: 1 }).toFormat('dd/MM/yyyy') }})\n\n",
+          "disable_notification": false,
+          "fileName": "",
+          "parse_mode": "HTML",
+          "reply_to_message_id": 0,
+          "message_thread_id": 0
+        }
+      },
+      "id": "b6a23d17-d9f1-4078-96ba-f320cafb1e64",
+      "name": "Telegram Error1",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        224,
+        448
+      ],
+      "webhookId": "6b647b06-795a-41ce-8106-e34fa4971904",
+      "executeOnce": false,
+      "credentials": {
+        "telegramApi": {
+          "id": "uQqYtY8WnE65c3nG",
+          "name": "ventas_copservirbot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Definimos el umbral en Bytes (218 KB * 1024)\nconst UMBRAL_BYTES = 244 * 1024; \n\nlet rawValue = 0;\n\n// Buscamos dentro de los objetos binarios\nfor (const k in items[0].binary) {\n  const binary = items[0].binary[k];\n  if (binary && binary.fileSize) {\n    // IMPORTANTE: Limpiamos el valor por si viene con texto tipo \"218 kB\"\n    // parseFloat extraerá solo el número '218' ignorando las letras\n    let size = parseFloat(binary.fileSize);\n    \n    // Si el texto original contenía \"kB\", lo multiplicamos por 1024 para tener bytes reales\n    // Si ya era un número grande (bytes), lo dejamos tal cual\n    if (binary.fileSize.toString().toLowerCase().includes('kb')) {\n       rawValue = size * 1024;\n    } else {\n       rawValue = size;\n    }\n    break; \n  }\n}\n\n// 2. Ahora la comparación será numérica y correcta\nconst esError = rawValue >= UMBRAL_BYTES;\n\nreturn [{\n  json: {\n    tamañoBytes: rawValue,\n    tamañoKB: parseFloat((rawValue / 1024).toFixed(2)),\n    esError: esError\n  },\n  binary: items[0].binary\n}];"
+      },
+      "id": "dc71a26f-3323-4759-a7fc-1828b6843aa8",
+      "name": "Verificar Imagen (Tamaño)3",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -560,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const chatIds = ['7237174388', '7867904883','1547297287','7718315100','7578428511'];\nreturn chatIds.map(chatId => ({\n  json: {\n    chatId,\n    ...items[0].json\n  },\n  binary: items[0].binary\n}));"
+      },
+      "id": "7ebfab48-01ee-4dd7-84b6-45e93aa559b9",
+      "name": "Lista de Destinatarios1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        576,
+        -112
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "automatizacionescopservir@gmail.com",
+        "subject": "=Reporte de Niveles de Servicio - {{ $now.minus({ days: 1 }).toFormat('dd/MM/yyyy') }}",
+        "message": "=<!DOCTYPE html>\n<html lang=\"es\">\n<head>\n  <meta charset=\"UTF-8\">\n  <title>Reporte de Nivesles de Servicio</title>\n</head>\n<body style=\"margin:0; padding:0; background-color:#ffffff; font-family: Arial, Helvetica, sans-serif;\">\n\n  <!-- Contenedor general -->\n  <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">\n    <tr>\n      <td align=\"center\" style=\"padding:30px 10px;\">\n\n        <!-- Logo -->\n        <img \n          src=\"https://iconape.com/wp-content/files/ax/261011/png/261011.png\" \n          alt=\"Copservir\"\n          style=\"max-width:180px; margin-bottom:20px;\"\n        />\n\n        <!-- Título -->\n        <h2 style=\"color:#2e7d32; margin-bottom:25px;\">\n          Reporte de Niveles de Servicio\n        </h2>\n\n        <!-- Caja principal -->\n        <table \n          width=\"600\" \n          cellpadding=\"0\" \n          cellspacing=\"0\"\n          style=\"\n            border:2px solid #4CAF50;\n            border-radius:8px;\n            padding:25px;\n          \"\n        >\n          <tr>\n            <td style=\"color:#333333; font-size:14px;\">\n\n              <p style=\"margin-top:0;\">\n                <strong>Reporte de ventas</strong><br>\n                Reporte actualizado desde Looker Studio.\n              </p>\n\n              <!-- Imagen del reporte -->\n              <div style=\"text-align:center; margin:20px 0;\">\n                <img \n                     src=\"{{ $json.urlImagen }}\"\n                  alt=\"Reporte de Ventas\"\n                  style=\"\n                    max-width:100%;\n                    border-radius:6px;\n                    border:1px solid #dddddd;\n                  \"\n                />\n              </div>\n\n              <!-- Botón -->\n              <div style=\"text-align:center; margin:30px 0;\">\n            <a \n  href=\"https://lookerstudio.google.com/u/2/reporting/9c34f067-3c33-4e55-a428-d412e5493613/page/spLpF\"\n  target=\"_blank\"\n  style=\"\n    background-color:#4CAF50;\n    color:#ffffff;\n    text-decoration:none;\n    padding:15px 20px;\n    border-radius:6px;\n    font-weight:bold;\n    display:inline-block;\n  \"\n>\n  Ver Reporte Interactivo\n</a>\n\n              </div>\n\n              <!-- Footer -->\n              <p style=\"font-size:12px; color:#777777; text-align:center; margin-bottom:0;\">\n                Enviado automáticamente por Copservir.<br>\n                Este mensaje fue generado por el Copservir Bot.\n              </p>\n\n            </td>\n          </tr>\n        </table>\n\n      </td>\n    </tr>\n  </table>\n\n</body>\n</html>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        800,
+        96
+      ],
+      "id": "ae782253-6c02-4bba-b94f-d66a96d80ec5",
+      "name": "Send a message",
+      "webhookId": "3ab1b58d-a30d-488b-a5f0-ca2e7765d923",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "lLZwXzPAJix3pZUi",
+          "name": "produccion"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      urlImagen: items[0].json.secure_url\n    },\n    binary: items[0].binary\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        576,
+        96
+      ],
+      "id": "294822cd-d1e6-479a-86c2-7100b72597ed",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "uploadFile",
+        "additionalFieldsFile": {}
+      },
+      "type": "n8n-nodes-cloudinary.cloudinary",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        96
+      ],
+      "id": "e10e72e5-07aa-4d66-82da-0481e3f07708",
+      "name": "Upload an asset from file data",
+      "credentials": {
+        "cloudinaryApi": {
+          "id": "NB2cQ39hPPk8QTUk",
+          "name": "Cloudinary account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.telegram.org/bot8468994540:AAGltttyxNCAHqVeeuPAyHVeQz9EM0Uixww/sendPhoto",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"chat_id\": \"{{ $json.chatId }}\",\n  \"photo\": \"{{ $('Upload an asset from file data').item.json.url }}\",\n  \"caption\": \"*REPORTE DE NIVELES DE SERVICIO*\\n\\nFecha del reporte enviado:\\n*{{ $now.minus({ days: 1 }).toFormat('dd/MM/yyyy') }}*\",\n  \"parse_mode\": \"MarkdownV2\",\n  \"reply_markup\": {\n    \"inline_keyboard\": [\n      [\n        {\n          \"text\": \"📊 Ir Reporte Looker Studio\",\n          \"url\": \"https://n9.cl/rcsrg\",\n          \"style\":\"primary\"\n\n        }\n      ]\n    ]\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        800,
+        -112
+      ],
+      "id": "182266d9-bfa7-41b3-8864-6853d2a3c9e8",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1UuH06wAQRqzO5dMiA7e3KvfuuGv79tXDdhGOCkJKFZ4/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 210553560,
+          "mode": "list",
+          "cachedResultName": "CedulaNS",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1UuH06wAQRqzO5dMiA7e3KvfuuGv79tXDdhGOCkJKFZ4/edit#gid=210553560"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        832,
+        480
+      ],
+      "id": "d849976b-b23b-4a29-990b-92e0640b93d8",
+      "name": "Get row(s) in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Wk8jUzSLl0pK4Syg",
+          "name": "produccion"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Recuperamos la URL de la imagen que generaste en el paso anterior\nconst urlImagen = $('Code in JavaScript1').first().json.urlImagen;\n\n// 2. Creamos una lista vacía para guardar solo los datos válidos\nconst listaEnvio = [];\n\n// 3. Recorremos todas las filas que llegaron de Google Sheets\nfor (const item of items) {\n  \n  // Obtenemos el valor de la columna \"Cédula\"\n  // ¡IMPORTANTE!: Asegúrate que en tu Excel la columna se llame \"Cédula\" (con tilde y mayúscula inicial)\n  // Si en tu Excel dice \"cedula\", cambia lo de abajo por item.json[\"cedula\"]\n  const numeroCedula = item.json[\"Cédula\"];\n\n  // 4. CONDICIÓN: Si existe la cédula y no está vacía\n  if (numeroCedula && numeroCedula.toString().trim() !== \"\") {\n    \n    // Agregamos a la lista final solo lo que nos interesa\n    listaEnvio.push({\n      json: {\n        cedula: numeroCedula, // Aquí va solo la cédula limpia\n        urlImagen: urlImagen  // Y la URL de la imagen para el envío\n      }\n    });\n  }\n}\n\n// 5. Devolvemos la lista limpia. El siguiente nodo se ejecutará una vez por cada elemento de esta lista.\nreturn listaEnvio;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1088,
+        480
+      ],
+      "id": "25249d78-177a-4cce-a9b1-4fca020290fc",
+      "name": "Code in JavaScript5"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.email }}",
+        "subject": "Ventas Diarias",
+        "message": "=<!DOCTYPE html>\n<html>\n<head>\n<style>\n  body{font-family:Arial,sans-serif;background-color:#ffffff;margin:0;padding:0}\n  .container{max-width:800px;margin:0 auto;padding:20px}\n  .header{text-align:center;padding:30px 0;background-color:#ffffff}\n  .logo{max-width:250px;height:auto}\n  .title{color:#2d5016;font-size:28px;font-weight:bold;margin:30px 0 20px 0;text-align:center}\n  .content{background-color:#f8f9fa;padding:30px;border-radius:10px;border:2px solid #4CAF50}\n  .footer{text-align:center;padding:20px;color:#666;font-size:14px}\n  a.button{display:inline-block;padding:15px 30px;background-color:#4CAF50;color:white!important;text-decoration:none;border-radius:5px;font-weight:bold;margin:20px 0}\n</style>\n</head>\n<body>\n<div class=\"container\">\n  <div class=\"header\">\n    <img src=\"https://res.cloudinary.com/dz7okl1ko/image/upload/v1752180853/5134606975890468276-removebg-preview_iskqsd.png\" class=\"logo\">\n  </div>\n  <h1 class=\"title\">Reporte de Ventas Diarias</h1>\n  <div class=\"content\">\n    <p style=\"color:#2d5016;font-size:16px;margin-bottom:20px\">Ventas Diarias</p>\n    <p style=\"color:#333;font-size:14px;line-height:1.6\">\n      Reporte actualizado desde Looker Studio.\n    </p>\n\n    <div style=\"text-align:center; margin: 20px 0;\">\n      <img src=\"{{$json.urlImagen}}\" style=\"max-width:100%; height:auto; display:block; margin:auto;\">\n    </div>\n\n    <p style=\"text-align:center\">\n      <a href=\"https://n9.cl/uwlwr\" class=\"button\">Ver Reporte Interactivo</a>\n    </p>\n\n    <p style=\"color:#666;font-size:12px;margin-top:30px\">Enviado automáticamente por copservir, se enviará un mensaje en copservir bot.</p>\n  </div>\n</div>\n</body>\n</html>\n",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1312,
+        288
+      ],
+      "id": "c9e9a4fd-2238-45c6-86c8-b3bc9a8eefa6",
+      "name": "Send a message (Dynamic)",
+      "webhookId": "02cf41c8-1c05-428c-914d-25a48861120a",
+      "notesInFlow": false,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "lLZwXzPAJix3pZUi",
+          "name": "produccion"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1UuH06wAQRqzO5dMiA7e3KvfuuGv79tXDdhGOCkJKFZ4/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 934805314,
+          "mode": "list",
+          "cachedResultName": "CorreosNS",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1UuH06wAQRqzO5dMiA7e3KvfuuGv79tXDdhGOCkJKFZ4/edit#gid=934805314"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        832,
+        288
+      ],
+      "id": "8cdd9ed9-c3b6-487f-8735-3640c8497aaa",
+      "name": "Get Email Recipients",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Wk8jUzSLl0pK4Syg",
+          "name": "produccion"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Recuperamos la URL de la imagen del nodo Code in JavaScript1\nconst urlImagen = $('Code in JavaScript1').first().json.urlImagen;\n\n// 2. Creamos una lista para guardar solo los correos válidos\nconst emailList = [];\n\n// 3. Recorremos todas las filas que llegaron del Google Sheets (Get Email Recipients)\nfor (const item of items) {\n  \n  // Obtenemos el valor de la columna \"Correo\"\n  const correo = item.json[\"correos\"];\n\n  // 4. CONDICIÓN: Si existe el correo y no está vacío\n  if (correo && correo.toString().trim() !== \"\") {\n    \n    emailList.push(correo.toString().trim());\n  }\n}\n\n// 5. CONDICIÓN DE SALIDA: Si la lista de correos está vacía, no devolvemos nada y el flujo termina aquí.\nif (emailList.length === 0) {\n    return []; // No devuelve ítems, el flujo se detiene.\n}\n\n// 6. Unimos todos los correos en una sola cadena separada por comas (formato aceptado por Gmail)\nconst recipients = emailList.join(',');\n\n// 7. Devolvemos un solo objeto con las dos variables que necesitamos en el nodo Gmail\nreturn [{\n    json: {\n        email: recipients,   // La lista de correos para el campo 'sendTo'\n        urlImagen: urlImagen // Y la URL de la imagen para el cuerpo del email\n    }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1088,
+        288
+      ],
+      "id": "a6854870-d4f9-4947-966b-8714cbd18df9",
+      "name": "Prepare Gmail Data"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://wsinternos.copservir.com/api/bi-telegram/v1/sendMessage",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "=\n{\n    \"numeroDocumento\": \"{{ $json.cedula }}\",\n    \"mensaje\": \"Reporte de Nivel de Servicio\",\n    \"url\": \"https://lookerstudio.google.com/u/1/reporting/9c34f067-3c33-4e55-a428-d412e5493613/page/spLpF\",\n    \"urlImagen\": \"{{ $json.urlImagen }}\"\n\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1312,
+        480
+      ],
+      "id": "dbf232a1-1a47-415e-9dfa-775280b467b9",
+      "name": "HTTP Request1",
+      "executeOnce": false,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      urlImagen: items[0].json.secure_url\n    },\n    binary: items[0].binary\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        576,
+        288
+      ],
+      "id": "1efbb34a-4e6c-4b0b-9c2a-4c85299d12f0",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 7,
+              "triggerAtMinute": 5
+            },
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                0,
+                6
+              ],
+              "triggerAtHour": 12,
+              "triggerAtMinute": 50
+            }
+          ]
+        }
+      },
+      "id": "a2099f27-8d37-4cfe-8738-e387b5118238",
+      "name": "Ejecución de Qlik a las 6:40am y fin semana 11am",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1072,
+        -96
+      ],
+      "notes": "Actívalo si quieres envíos automáticos semanales"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8001/nivel-servicio-producto",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n \"titulo\": \"exitoso\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -784,
+        -96
+      ],
+      "id": "f520240c-5143-47e0-9122-8e3c4c3300a6",
+      "name": "Qlik Nivel de Servicio"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8,
+              "triggerAtMinute": 1
+            },
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                0,
+                6
+              ],
+              "triggerAtHour": 14,
+              "triggerAtMinute": 1
+            }
+          ]
+        }
+      },
+      "id": "223d0d85-1e78-4d46-b0e4-a7718bae8603",
+      "name": "Progranador de las 8 am de Reporte NVL de Servicio",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1056,
+        144
+      ],
+      "notes": "Actívalo si quieres envíos automáticos semanales"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Capturar Looker (APIFlash)": {
+      "main": [
+        [
+          {
+            "node": "Verificar Imagen (Tamaño)3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ejecutar Manualmente": {
+      "main": [
+        [
+          {
+            "node": "Capturar Looker (APIFlash)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Error Detectado?1": {
+      "main": [
+        [
+          {
+            "node": "Upload an asset from file data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Lista Destinatarios Error1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lista Destinatarios Error1": {
+      "main": [
+        [
+          {
+            "node": "Telegram Error1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verificar Imagen (Tamaño)3": {
+      "main": [
+        [
+          {
+            "node": "IF Error Detectado?1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lista de Destinatarios1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload an asset from file data": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Lista de Destinatarios1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript5": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Email Recipients": {
+      "main": [
+        [
+          {
+            "node": "Prepare Gmail Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Gmail Data": {
+      "main": [
+        [
+          {
+            "node": "Send a message (Dynamic)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Get Email Recipients",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get row(s) in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ejecución de Qlik a las 6:40am y fin semana 11am": {
+      "main": [
+        [
+          {
+            "node": "Qlik Nivel de Servicio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qlik Nivel de Servicio": {
+      "main": [
+        []
+      ]
+    },
+    "Progranador de las 8 am de Reporte NVL de Servicio": {
+      "main": [
+        [
+          {
+            "node": "Capturar Looker (APIFlash)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "9db49ec1-5f95-4305-8c99-4ebaf9a48ab2",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ddc0366dfc745de3552fd12efa4741d606ed9b2238c7af264dab5222c1e67ece"
+  },
+  "id": "XQBVU1khk83aSMHF",
+  "tags": []
+}
